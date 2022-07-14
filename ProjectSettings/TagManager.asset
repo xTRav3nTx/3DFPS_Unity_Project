@@ -7,6 +7,8 @@ TagManager:
   - Creature
   - Gun
   - PatrolPt
+  - CreatureHead
+  - CreatureSword
   layers:
   - Default
   - TransparentFX
@@ -14,8 +16,8 @@ TagManager:
   - Ground
   - Water
   - UI
-  - 
-  - 
+  - Enemy
+  - Player
   - 
   - 
   - 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Gun : MonoBehaviour
-{
+{ 
     bool isShooting;
     [SerializeField] private Transform fpsCam;
     [SerializeField] private float range = 100f;
@@ -14,10 +14,12 @@ public class Gun : MonoBehaviour
     [SerializeField] private GameObject bulletHole;
     [SerializeField] private AudioSource shotSound;
 
-    RaycastHit hit;
+    private RaycastHit hit;
+
+    public bool shotCreature;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         shotSound = GetComponent<AudioSource>();
     }
@@ -46,19 +48,22 @@ public class Gun : MonoBehaviour
     {
         shotSound.Play();
         
-        if (Physics.Raycast(fpsCam.position, fpsCam.forward, out hit, range))
+        if(Physics.Raycast(fpsCam.position, fpsCam.forward, out hit, range))
         {
-            if(hit.rigidbody != null)
+            if(hit.transform.CompareTag("Creature"))
             {
-                hit.rigidbody.AddForce(-hit.normal * impactForce);
+                shotCreature = true;
             }
-            
-            
-
             Quaternion impactRotation = Quaternion.LookRotation(hit.normal);
             GameObject bulletImpactHole = Instantiate(bulletHole, hit.point, impactRotation);
             bulletImpactHole.transform.parent = hit.transform;
             Destroy(bulletImpactHole, 3);
+            if(hit.transform.CompareTag("CreatureHead"))
+            {
+                return;
+            }
+            
         }
+        
     }
 }

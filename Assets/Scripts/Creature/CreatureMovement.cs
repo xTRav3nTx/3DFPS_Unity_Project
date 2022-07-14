@@ -5,17 +5,24 @@ using UnityEngine.AI;
 
 public class CreatureMovement : MonoBehaviour
 {
+    public Gun gun;
+    public CreatureRayCast ray;
+
     private NavMeshAgent navMeshAgent;
     [SerializeField] private Animator creature;
     [SerializeField] private Transform creatureTransform;
 
     private int idleSpeed = 0;
+    private float walkChaseSpeed = 6f;
     private float walkspeed = 4.2f;
     private float sprintspeed = 11;
+    private float attackwalkSpeed = 2f;
 
     private float timer;
     private float idleAnimtime = 2.6f;
     private float roarAnimtime = 5.5f;
+    private float hitAnimtime = 1.5f;
+    private float attackAnimtime = 2.3f;
 
 
     [SerializeField] private Transform[] patrolPoints;
@@ -26,16 +33,20 @@ public class CreatureMovement : MonoBehaviour
     
 
     private float chaseRange = 20f;
-    private float walkChase = 12f;
+    private float walkChase = 9f;
     private float stopChase = 100f;
-    private float attackRange = 8f;
+    private float attackRange = 4f;
     private float distancefromPlayer;
+    public bool isAttacking;
+
+    public float attackPower = 15f;
 
     private float distancefromPatrolPoint;
-    
+
 
     private void Awake()
     {
+        player = GameObject.FindGameObjectWithTag("Player").transform;
         navMeshAgent = GetComponent<NavMeshAgent>();
         patrolIndex = Random.Range(0, patrolPoints.Length);
         StartCoroutine(GotoFirstPoint());
@@ -45,14 +56,12 @@ public class CreatureMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
         navMeshAgent.speed = idleSpeed;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
         distancefromPlayer = Vector3.Distance(player.position, creature.transform.position);
         distancefromPatrolPoint = Vector3.Distance(creature.transform.position, navMeshAgent.destination);
         AttackPlayer();
@@ -87,9 +96,18 @@ public class CreatureMovement : MonoBehaviour
     {
         navMeshAgent.speed = idleSpeed;
         yield return new WaitForSeconds(roarAnimtime);
-        GoToNextPoint();
+        navMeshAgent.destination = patrolPoints[currentPatrolIndex].position;
         navMeshAgent.speed = walkspeed;
         StopAllCoroutines();
+    }
+
+    IEnumerator SlowWalkwhileAttacking()
+    {
+        navMeshAgent.speed = attackwalkSpeed;
+        yield return new WaitForSeconds(attackAnimtime/2f);
+        isAttacking = true;
+        yield return new WaitForSeconds(attackAnimtime/2f);
+        isAttacking = false;
     }
 
     void GoToNextPoint()
@@ -115,8 +133,7 @@ public class CreatureMovement : MonoBehaviour
         currentPatrolIndex = patrolIndex;
         return patrolIndex; 
     }
-
-    void AttackPlayer()
+    void playerIsClose()
     {
         //initializes attack player sequence
         if (distancefromPlayer < chaseRange && creature.GetBool("isChasing") == false)
@@ -127,41 +144,42 @@ public class CreatureMovement : MonoBehaviour
             creature.SetBool("firstEncounter", true);
             navMeshAgent.destination = player.position;
         }
+    }
+
+    void shotByPlayer()
+    {
+        if(gun.shotCreature && creature.GetBool("isChasing") == false)
+        {
+            creature.SetBool("atPatrolPoint", false);
+            creature.SetBool("isPatrolling", false);
+            creature.SetBool("isChasing", true);
+            creature.SetBool("firstEncounter", true);
+            navMeshAgent.destination = player.position;
+        }
+    }
+
+
+    void AttackPlayer()
+    {
+        playerIsClose();
+        shotByPlayer();
+        AttackingPlayer();
 
         if(creature.GetBool("firstEncounter") == true)
         {
             timer += Time.deltaTime;
         }
-
         if (timer <= roarAnimtime && creature.GetBool("isChasing") == true)
         {
             navMeshAgent.speed = idleSpeed;
         }
         if (timer > roarAnimtime && creature.GetBool("isChasing") == true)
         {
-            //changes creature speed to walk when chasing and player is very close
-            if (distancefromPlayer < walkChase)
+            if(!isAttacking)
             {
-                creature.SetBool("firstEncounter", false);
-                creature.SetBool("playerClose", true);
-                navMeshAgent.speed = walkspeed;
-            }
-            else
-            {
-                creature.SetBool("firstEncounter", false);
-                creature.SetBool("playerClose", false);
-                navMeshAgent.speed = sprintspeed;
+                attackingChaseSpeed();
             }
         }
-        if(distancefromPlayer < attackRange)
-        {
-            creature.SetBool("isAttacking", true);
-        }
-        else
-        {
-            creature.SetBool("isAttacking", false);
-        }
-
         //updates player location while chasing
         if (creature.GetBool("isChasing") == true)
         {
@@ -174,7 +192,37 @@ public class CreatureMovement : MonoBehaviour
             creature.SetBool("playerClose", false);
             StartCoroutine(IdleafterChase());
             timer = 0f;
-            
+            gun.shotCreature = false;
+        }
+    }
+
+    void attackingChaseSpeed()
+    {
+        //changes creature speed to walk when chasing and player is very close
+        if (distancefromPlayer < walkChase)
+        {
+            creature.SetBool("firstEncounter", false);
+            creature.SetBool("playerClose", true);
+            navMeshAgent.speed = walkChaseSpeed;
+        }
+        else
+        {
+            creature.SetBool("firstEncounter", false);
+            creature.SetBool("playerClose", false);
+            navMeshAgent.speed = sprintspeed;
+        }
+    }
+
+    void AttackingPlayer()
+    {
+        if (distancefromPlayer < attackRange && ray.lookingAtPlayer)
+        {
+            creature.SetBool("isAttacking", true);
+            StartCoroutine(SlowWalkwhileAttacking());
+        }
+        else
+        {
+            creature.SetBool("isAttacking", false);
         }
     }
 
