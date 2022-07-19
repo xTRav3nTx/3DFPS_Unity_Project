@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public CreatureMovement creature;
+    public Transform turret;
 
     float xMove;
     float zMove;
@@ -14,10 +15,13 @@ public class PlayerMovement : MonoBehaviour
     public Collider creatureSword;
 
     float currentspeed;
-    float speed = 9f;
-    float sprintSpeed = 15f;
-    float sidestepSpeed = 7f;
-    float backstepSpeed = 5f;
+    float walkSpeed = 7f;
+    float sprintSpeed = 13f;
+    float strafeSprintSpeed = 9f;
+    float sidestepSpeed = 5f;
+    float backstepSpeed = 3f;
+    public bool isSprinting;
+
     public float gravity = -9.8f;
     Vector3 velocity;
 
@@ -30,6 +34,8 @@ public class PlayerMovement : MonoBehaviour
     public bool isGrounded;
 
     public bool wasHit;
+
+    private float DistancefromTurret;
       
 
     // Update is called once per frame
@@ -61,25 +67,30 @@ public class PlayerMovement : MonoBehaviour
         Vector3 direction;
         direction = playerOrientation.forward * zMove + playerOrientation.right * xMove;
       
-        if (Input.GetKey(KeyCode.LeftShift) && zMove != -1 && xMove == 0)
+        if (Input.GetKey(KeyCode.LeftShift) && zMove == 1 && xMove == 0)
         {
-            controller.Move(direction * sprintSpeed * Time.deltaTime);
-            currentspeed = sprintSpeed;
+            movementSpeed(direction, sprintSpeed);
+            isSprinting = true;
+        }
+        else if(Input.GetKey(KeyCode.LeftShift) && zMove == 1 && xMove != 0)
+        {
+            movementSpeed(direction, strafeSprintSpeed);
+            isSprinting = true;
         }
         else if(zMove == -1)
         {
-            controller.Move(direction * backstepSpeed * Time.deltaTime);
-            currentspeed = backstepSpeed;
+            movementSpeed(direction, backstepSpeed);
+            isSprinting = false;
         }
         else if(xMove != 0)
         {
-            controller.Move(direction * sidestepSpeed * Time.deltaTime);
-            currentspeed = sidestepSpeed;
+            movementSpeed(direction, sidestepSpeed);
+            isSprinting = false;
         }
         else
         {
-            controller.Move(direction * speed * Time.deltaTime);
-            currentspeed = speed;
+            movementSpeed(direction, walkSpeed);
+            isSprinting = false;
         }
     }
 
@@ -89,6 +100,12 @@ public class PlayerMovement : MonoBehaviour
         {
             velocity.y = Mathf.Sqrt(jumpheight * -2f * gravity);
         }
+    }
+
+    private void movementSpeed(Vector3 direction,float speed)
+    {
+        controller.Move(direction * speed * Time.deltaTime);
+        currentspeed = speed;
     }
 
     private void OnTriggerEnter(Collider other)

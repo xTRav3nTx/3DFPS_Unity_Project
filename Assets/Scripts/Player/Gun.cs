@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Gun : MonoBehaviour
-{ 
+{
+    public PlayerMovement player;
+
     bool isShooting;
     [SerializeField] private Transform fpsCam;
     [SerializeField] private float range = 100f;
@@ -23,11 +25,14 @@ public class Gun : MonoBehaviour
     {
         shotSound = GetComponent<AudioSource>();
     }
-
     // Update is called once per frame
     void Update()
     {
-        shoot();
+        if(!player.isSprinting)
+        {
+            shoot();
+        }
+        
     }
 
     void shoot()

@@ -13,9 +13,9 @@ public class CreatureMovement : MonoBehaviour
     [SerializeField] private Transform creatureTransform;
 
     private int idleSpeed = 0;
-    private float walkChaseSpeed = 6f;
-    private float walkspeed = 4.2f;
-    private float sprintspeed = 11;
+    private float walkChaseSpeed = 4f;
+    private float walkspeed = 2.2f;
+    private float sprintspeed = 9;
     private float attackwalkSpeed = 2f;
 
     private float timer;
