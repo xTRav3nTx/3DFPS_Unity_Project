@@ -29,7 +29,7 @@ public class CreatureMovement : MonoBehaviour
     private int patrolIndex;
     private int currentPatrolIndex;
 
-    private Transform player;
+    [SerializeField] private Transform player;
     
 
     private float chaseRange = 20f;
@@ -46,7 +46,6 @@ public class CreatureMovement : MonoBehaviour
 
     private void Awake()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
         navMeshAgent = GetComponent<NavMeshAgent>();
         patrolIndex = Random.Range(0, patrolPoints.Length);
         StartCoroutine(GotoFirstPoint());

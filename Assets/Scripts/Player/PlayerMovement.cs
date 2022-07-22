@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public CreatureMovement creature;
-    public Transform turret;
+    
 
     float xMove;
     float zMove;
